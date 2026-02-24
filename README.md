@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Tank Statuses (Zustand + Flask)
+
+This app reads tank statuses from Flask endpoint `/api/tanks/statuses` via Zustand store:
+
+- Store: `src/store/tankStore.ts`
+- Dashboard UI: `app/dashboard/page.tsx`
+
+Set the Flask API base URL in your local env file:
+
+```bash
+cp .env.example .env.local
+```
+
+```env
+NEXT_PUBLIC_FLASK_API_BASE_URL=http://163.44.121.247:5000
+```
+
+Then run:
+
+```bash
+npm run dev
+```
+
 ## Getting Started
 
 First, run the development server:
