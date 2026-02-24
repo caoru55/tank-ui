@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createMovement } from '../../app/actions/createMovement';
+import { createMovement } from '../../../app/actions/createMovement';
 
 const CreateMovementButton: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -10,17 +10,29 @@ const CreateMovementButton: React.FC = () => {
         setMessage(null);
         
         const token = localStorage.getItem('jwt'); // Assuming JWT is stored in local storage
+        if (!token) {
+            setMessage('JWT token is missing. Please login again.');
+            setLoading(false);
+            return;
+        }
+
         const movementData = {
             fk_tanks: 'tank_id', // Replace with actual tank ID
             operation: 'operation_type', // Replace with actual operation type
-            fk_customers: 'customer_id' // Replace with actual customer ID
+            fk_customers: 1 // Replace with actual customer ID
         };
 
         try {
-            await createMovement(movementData.fk_tanks, movementData.operation, movementData.fk_customers, token);
+            await createMovement({
+                fk_tanks: movementData.fk_tanks,
+                operation: movementData.operation,
+                fk_customers: movementData.fk_customers,
+                token,
+            });
             setMessage('Movement created successfully!');
         } catch (error) {
-            setMessage('Error creating movement: ' + error.message);
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            setMessage('Error creating movement: ' + message);
         } finally {
             setLoading(false);
         }

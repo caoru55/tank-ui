@@ -9,6 +9,11 @@ const STORE_NAME = 'movementsQueue'
 const KEY_PATH = 'id'
 
 type QueueRecord = MovementQueueItem & { id?: number }
+type ServiceWorkerRegistrationWithSync = ServiceWorkerRegistration & {
+  sync?: {
+    register: (tag: string) => Promise<void>
+  }
+}
 
 const openQueueDb = async (): Promise<IDBDatabase> =>
   await new Promise((resolve, reject) => {
@@ -49,7 +54,7 @@ export const enqueueMovement = async (item: MovementQueueItem): Promise<void> =>
 
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.ready
-      .then((registration) => registration.sync?.register('sync-movements'))
+      .then((registration) => (registration as ServiceWorkerRegistrationWithSync).sync?.register('sync-movements'))
       .catch(() => undefined)
   }
 }

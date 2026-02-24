@@ -1,5 +1,5 @@
 import React from 'react';
-import CreateMovementButton from '../../components/movement/CreateMovementButton';
+import CreateMovementButton from '../components/movement/CreateMovementButton';
 
 const DashboardPage = () => {
     return (
