@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createMovement } from "../../actions/createMovement";
+import { createMovementClient } from "@/src/store/createMovementClient";
 
 export default function CreateMovementButton() {
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ export default function CreateMovementButton() {
     }
 
     try {
-      const result = await createMovement({
+      const result = await createMovementClient({
         fk_tanks: "B03",
         operation: "CheckOut",
         fk_customers: 1,

@@ -2,20 +2,44 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Tank Statuses (Zustand + Flask)
 
-This app reads tank statuses from Flask endpoint `/api/tanks/statuses` via Zustand store:
+This app reads tank statuses directly from Flask endpoint `/api/tanks/statuses` via Zustand store:
 
 - Store: `src/store/tankStore.ts`
 - Dashboard UI: `app/dashboard/page.tsx`
 
-Set the Flask API base URL in your local env file:
+## Environment Variables
+
+Copy env template first:
 
 ```bash
 cp .env.example .env.local
 ```
 
+Required variables:
+
 ```env
 NEXT_PUBLIC_FLASK_API_BASE_URL=http://163.44.121.247:5000
+NEXT_PUBLIC_FILLING_STATION_LAT=
+NEXT_PUBLIC_FILLING_STATION_LNG=
 ```
+
+- `NEXT_PUBLIC_FLASK_API_BASE_URL`: Base URL of Flask backend used by static client fetches.
+- `NEXT_PUBLIC_FILLING_STATION_LAT` / `NEXT_PUBLIC_FILLING_STATION_LNG`: Coordinates for exception-transition distance checks.
+
+## Static Export (Next.js 16)
+
+This project is configured with `output: "export"` in `next.config.ts`.
+
+- App Route APIs and Server Actions are not supported in static export mode.
+- The frontend calls Flask APIs directly.
+
+Build static output:
+
+```bash
+npm run build
+```
+
+Generated static files are written to `out/`.
 
 Then run:
 

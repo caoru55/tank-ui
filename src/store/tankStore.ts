@@ -43,6 +43,17 @@ const FILLING_STATION_LOCATION =
     ? { lat: fillingStationLat, lng: fillingStationLng }
     : null
 
+const resolveFlaskBaseUrl = (): string => {
+  const configured = process.env.NEXT_PUBLIC_FLASK_API_BASE_URL
+  if (configured && configured.trim().length > 0) {
+    return configured.replace(/\/$/, '')
+  }
+
+  return 'http://163.44.121.247:5000'
+}
+
+const TANK_STATUSES_ENDPOINT = `${resolveFlaskBaseUrl()}/api/tanks/statuses`
+
 const createEmptyStatuses = (): TankStatuses => ({
   Available: [],
   InUse: [],
@@ -142,7 +153,7 @@ export const useTankStore = create<TankStore>((set, get) => ({
     set({ isLoading: true, errorMessage: null })
 
     try {
-      const response = await fetch('/api/tanks/statuses', {
+      const response = await fetch(TANK_STATUSES_ENDPOINT, {
         method: 'GET',
         headers: {
           Accept: 'application/json',

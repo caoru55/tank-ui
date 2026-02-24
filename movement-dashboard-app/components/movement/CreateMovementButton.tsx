@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createMovement } from '../../../app/actions/createMovement';
+import { createMovementClient } from '../../../src/store/createMovementClient';
 
 const CreateMovementButton: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const CreateMovementButton: React.FC = () => {
         };
 
         try {
-            await createMovement({
+            await createMovementClient({
                 fk_tanks: movementData.fk_tanks,
                 operation: movementData.operation,
                 fk_customers: movementData.fk_customers,
