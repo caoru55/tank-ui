@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#4CAF50" />
+  <rect x="90" y="90" width="332" height="332" rx="42" fill="#ffffff" />
+  <path d="M142 142h72v72h-72zM298 142h72v72h-72zM142 298h72v72h-72zM244 244h36v36h-36zM298 298h72v72h-72z" fill="#1f2937" />
+  <text x="256" y="462" text-anchor="middle" font-size="54" font-family="Arial" fill="#ffffff">QR</text>
+</svg>

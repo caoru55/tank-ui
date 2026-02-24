@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { buildPayload } from './buildPayload'
 import { calcDistance } from './calcDistance'
 import { determineTransition, type GPSLocation, type TankOperation, type TankState, type TransitionResult } from './determineTransition'
+import { enqueueMovement, isLikelyOfflineError } from './offlineQueue'
 import { postMovement } from './postMovement'
 
 const TANK_STATUS_KEYS = ['Available', 'InUse', 'Retrieved', 'ToBeDiscarded', 'Discarded'] as const
@@ -15,7 +16,7 @@ type ParsedTankStatuses = {
   updatedAt: string
 }
 
-type LastTransition = {
+export type LastTransition = {
   tank: string
   from: TankState
   to: TankState
@@ -108,7 +109,11 @@ type TankStore = {
   errorMessage: string | null
   jwtToken: string | null
   lastTransition: LastTransition | null
+  logs: LastTransition[]
+  lastScannedTank: string | null
   setJwtToken: (token: string | null) => void
+  addLog: (entry: LastTransition) => void
+  setLastScannedTank: (tank: string | null) => void
   fetchStatuses: () => Promise<void>
   transitionStatus: (tankNumber: string, operation: TankOperation, gps: GPSLocation) => Promise<void>
 }
@@ -120,8 +125,18 @@ export const useTankStore = create<TankStore>((set, get) => ({
   errorMessage: null,
   jwtToken: null,
   lastTransition: null,
+  logs: [],
+  lastScannedTank: null,
   setJwtToken: (token) => {
     set({ jwtToken: token })
+  },
+  addLog: (entry) => {
+    set((state) => ({
+      logs: [entry, ...state.logs].slice(0, 20),
+    }))
+  },
+  setLastScannedTank: (tank) => {
+    set({ lastScannedTank: tank })
   },
   fetchStatuses: async () => {
     set({ isLoading: true, errorMessage: null })
@@ -185,34 +200,56 @@ export const useTankStore = create<TankStore>((set, get) => ({
     }
 
     const payload = buildPayload(operation, tankNumber)
-    const token =
-      state.jwtToken ?? (typeof window !== 'undefined' ? window.localStorage.getItem('jwt') : null)
+    const token = state.jwtToken ?? (typeof window !== 'undefined' ? window.localStorage.getItem('jwt') : null)
 
     if (!token) {
       set({ errorMessage: 'JWT が未設定です。再ログインしてください。' })
       return
     }
 
+    if (!state.jwtToken) {
+      set({ jwtToken: token })
+    }
+
+    const nextLog: LastTransition = {
+      tank: tankNumber,
+      from: currentState,
+      to: transition.nextState,
+      operation,
+      timestamp: new Date().toISOString(),
+      isNormal: transition.isNormal,
+      exceptionType: transition.exceptionType,
+    }
+
     try {
       await postMovement(payload, token)
     } catch (error) {
+      if (isLikelyOfflineError(error)) {
+        try {
+          await enqueueMovement({ payload, token, queuedAt: nextLog.timestamp })
+          set({
+            errorMessage: 'オフラインのためキューに保存しました。オンライン復帰後に同期されます。',
+            lastTransition: nextLog,
+          })
+          get().addLog(nextLog)
+          return
+        } catch {
+          set({ errorMessage: 'オフラインキューへの保存に失敗しました' })
+          return
+        }
+      }
+
       set({ errorMessage: getErrorMessage(error, 'Movements API 呼び出しに失敗しました') })
       return
     }
 
-    await state.fetchStatuses()
+    await get().fetchStatuses()
 
     set({
       errorMessage: null,
-      lastTransition: {
-        tank: tankNumber,
-        from: currentState,
-        to: transition.nextState,
-        operation,
-        timestamp: new Date().toISOString(),
-        isNormal: transition.isNormal,
-        exceptionType: transition.exceptionType,
-      },
+      lastTransition: nextLog,
     })
+
+    get().addLog(nextLog)
   },
 }))
