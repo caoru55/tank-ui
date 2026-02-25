@@ -84,7 +84,7 @@ export const sendQueuedMovements = async (): Promise<void> => {
   for (const item of queue) {
     if (typeof item.id !== 'number') continue
 
-    const response = await fetch('http://163.44.121.247:5000/api/movements', {
+    const response = await fetch('/api/movements', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

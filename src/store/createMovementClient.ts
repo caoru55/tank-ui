@@ -11,7 +11,7 @@ export async function createMovementClient({
   fk_customers,
   token,
 }: CreateMovementInput): Promise<unknown> {
-  const res = await fetch('http://163.44.121.247:5000/api/movements', {
+  const res = await fetch('/api/movements', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

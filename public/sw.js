@@ -110,7 +110,7 @@ const sendQueuedMovements = async () => {
     if (typeof item?.id !== 'number') continue
 
     try {
-      const response = await fetch('http://163.44.121.247:5000/api/movements', {
+      const response = await fetch('/api/movements', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
