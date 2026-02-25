@@ -153,7 +153,8 @@ export const useTankStore = create<TankStore>((set, get) => ({
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch tank statuses: ${response.status}`)
+        const detail = await response.text().catch(() => '')
+        throw new Error(`Failed to fetch tank statuses: ${response.status}${detail ? ` ${detail}` : ''}`)
       }
 
       const payload: unknown = await response.json()
