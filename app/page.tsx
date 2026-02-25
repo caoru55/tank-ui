@@ -10,7 +10,7 @@ export default function Page() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  // 🔥 JWT があれば自動で /dashboard に遷移
+  // 🔥 JWT があれば自動で /qr-register に遷移
   useEffect(() => {
     const token = localStorage.getItem("jwt");
     const user = localStorage.getItem("user");
@@ -21,7 +21,7 @@ export default function Page() {
 
     try {
       JSON.parse(user);
-      router.replace("/dashboard");
+      router.replace("/qr-register");
     } catch {
       localStorage.removeItem("jwt");
       localStorage.removeItem("user");
@@ -50,8 +50,8 @@ export default function Page() {
       localStorage.setItem("user", JSON.stringify(json.data.user));
 
 
-      // 🔥 ログイン成功 → /dashboard に遷移
-      router.replace("/dashboard");
+      // 🔥 ログイン成功 → /qr-register に遷移
+      router.replace("/qr-register");
     } catch {
       setMessage("通信エラーが発生しました");
     }
