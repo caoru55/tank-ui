@@ -5,6 +5,7 @@ import { Scanner } from '@yudiel/react-qr-scanner'
 import { useTankStore } from '@/src/store/tankStore'
 import { OPERATION_COLORS } from '@/src/store/operationTheme'
 import { playBeep } from '@/src/store/playBeep'
+import { parseQrCode, verifyCrc16 } from '@/src/store/qrCode'
 import { UI } from '@/src/store/uiTheme'
 import type { GPSLocation, TankOperation } from '@/src/store/determineTransition'
 
@@ -12,7 +13,7 @@ type QRScannerProps = {
   operation: TankOperation
 }
 
-const normalizeScanResult = (result: unknown): string | null => {
+const getScannedCodeForDisplay = (result: unknown): string | null => {
   if (typeof result === 'string') {
     const value = result.trim()
     return value.length > 0 ? value : null
@@ -32,6 +33,7 @@ const normalizeScanResult = (result: unknown): string | null => {
 export default function QRScannerPanel({ operation }: QRScannerProps) {
   const transitionStatus = useTankStore((s) => s.transitionStatus)
   const setLastScannedTank = useTankStore((s) => s.setLastScannedTank)
+  const setErrorMessage = useTankStore((s) => s.setErrorMessage)
   const [gps, setGps] = useState<GPSLocation>(null)
   const [isCooldown, setIsCooldown] = useState(false)
   const cooldownRef = useRef(false)
@@ -61,12 +63,28 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
   const handleScan = async (result: unknown) => {
     if (cooldownRef.current) return
 
-    const tankNumber = normalizeScanResult(result)
-    if (!tankNumber) return
+    const scannedRaw = getScannedCodeForDisplay(result)
+    if (!scannedRaw) return
+
+    let tankNumber: string
+    try {
+      const parsed = parseQrCode(scannedRaw)
+      tankNumber = parsed.tankNumber
+
+      if (parsed.crcHex && !verifyCrc16(parsed.tankNumber, parsed.crcHex)) {
+        throw new Error(`QRコードのCRC16検証に失敗しました（${parsed.raw}）`)
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'QRコードの解析に失敗しました'
+      setErrorMessage(message)
+      playBeep('error')
+      navigator.vibrate?.(200)
+      return
+    }
 
     cooldownRef.current = true
     setIsCooldown(true)
-    setLastScannedTank(tankNumber)
+    setLastScannedTank(scannedRaw ?? tankNumber)
 
     await transitionStatus(tankNumber, operation, gps)
 

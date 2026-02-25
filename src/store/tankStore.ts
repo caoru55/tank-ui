@@ -114,6 +114,7 @@ type TankStore = {
   logs: LastTransition[]
   lastScannedTank: string | null
   setJwtToken: (token: string | null) => void
+  setErrorMessage: (message: string | null) => void
   addLog: (entry: LastTransition) => void
   setLastScannedTank: (tank: string | null) => void
   fetchStatuses: () => Promise<void>
@@ -131,6 +132,9 @@ export const useTankStore = create<TankStore>((set, get) => ({
   lastScannedTank: null,
   setJwtToken: (token) => {
     set({ jwtToken: token })
+  },
+  setErrorMessage: (message) => {
+    set({ errorMessage: message })
   },
   addLog: (entry) => {
     set((state) => ({
