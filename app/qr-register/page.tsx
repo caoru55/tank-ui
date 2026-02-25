@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import FeedbackLayer from './FeedbackLayer'
 import LogPanel from './LogPanel'
 import QRScannerPanel from './QRScanner'
@@ -21,7 +22,9 @@ import type { TankOperation } from '@/src/store/determineTransition'
 const modes: TankOperation[] = ['use_tanks', 'retrieve_tanks', 'refill_tanks', 'testfail_tanks', 'discard_tanks']
 
 export default function QRRegisterPage() {
+  const router = useRouter()
   const [operation, setOperation] = useState<TankOperation>('retrieve_tanks')
+  const [isAuthReady, setIsAuthReady] = useState(false)
   const fetchStatuses = useTankStore((s) => s.fetchStatuses)
   const setJwtToken = useTankStore((s) => s.setJwtToken)
 
@@ -29,11 +32,30 @@ export default function QRRegisterPage() {
 
   useEffect(() => {
     const token = window.localStorage.getItem('jwt')
-    if (token) {
-      setJwtToken(token)
+    const user = window.localStorage.getItem('user')
+
+    if (!token || !user) {
+      router.replace('/')
+      return
     }
+
+    try {
+      JSON.parse(user)
+    } catch {
+      window.localStorage.removeItem('jwt')
+      window.localStorage.removeItem('user')
+      router.replace('/')
+      return
+    }
+
+    setJwtToken(token)
     void fetchStatuses()
-  }, [fetchStatuses, setJwtToken])
+    setIsAuthReady(true)
+  }, [fetchStatuses, router, setJwtToken])
+
+  if (!isAuthReady) {
+    return <p style={{ padding: 20 }}>認証状態を確認中…</p>
+  }
 
   const handleModeChange = (op: TankOperation) => {
     setOperation(op)

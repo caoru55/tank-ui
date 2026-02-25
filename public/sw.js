@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tank-ui-cache-v2'
+const CACHE_NAME = 'tank-ui-cache-v3'
 const APP_SHELL = ['/', '/qr-register/', '/help/', '/manifest.json']
 const DB_NAME = 'tank-ui-offline-db'
 const STORE_NAME = 'movementsQueue'
@@ -25,6 +25,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
 
   if (request.method !== 'GET') {
+    return
+  }
+
+  const url = new URL(request.url)
+  const isSameOriginApiRequest =
+    url.origin === self.location.origin && (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/'))
+
+  if (isSameOriginApiRequest) {
     return
   }
 
