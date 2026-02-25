@@ -26,17 +26,9 @@ const crc16CcittFalse = (value: string): number => {
   return crc & 0xffff
 }
 
-const crc16Modbus = (value: string): number => {
-  let crc = 0xffff
-  for (const byte of toAsciiBytes(value)) {
-    crc ^= byte
-    for (let index = 0; index < 8; index += 1) {
-      const lsb = crc & 0x0001
-      crc >>= 1
-      if (lsb) crc ^= 0xa001
-    }
-  }
-  return crc & 0xffff
+const crc16Good = (value: string): number => {
+  const ccittFalse = crc16CcittFalse(value)
+  return (ccittFalse ^ 0xffff) & 0xffff
 }
 
 export const parseQrCode = (rawValue: string): ParsedQrCode => {
@@ -63,7 +55,6 @@ export const parseQrCode = (rawValue: string): ParsedQrCode => {
 
 export const verifyCrc16 = (tankNumber: string, crcHex: string): boolean => {
   const expected = crcHex.toUpperCase()
-  const ccitt = toHex4(crc16CcittFalse(tankNumber))
-  const modbus = toHex4(crc16Modbus(tankNumber))
-  return expected === ccitt || expected === modbus
+  const good = toHex4(crc16Good(tankNumber))
+  return expected === good
 }
