@@ -25,7 +25,7 @@ export const OPERATION_LABELS: Record<TankOperation, string> = {
 }
 
 export const OPERATION_VOICE: Record<TankOperation, string> = {
-  use_tanks: '持出モードです',
+  use_tanks: 'もちだしモードです',
   retrieve_tanks: '回収モードです',
   refill_tanks: '充填モードです',
   testfail_tanks: '点検不合格モードです',
