@@ -78,32 +78,28 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
 
     await transitionStatus(tankNumber)
 
-    const { errorMessage, lastTransition } = useTankStore.getState()
-    const isCurrentScanTransition = lastTransition?.tank === tankNumber
-    const isNormalTransition = isCurrentScanTransition ? lastTransition?.isNormal === true : false
-    const isAbnormalTransition = isCurrentScanTransition ? lastTransition?.isNormal === false : false
+    const state = useTankStore.getState()
+    const last = state.lastTransition
 
-    if (isNormalTransition) {
+    if (!last) {
+      playError()
+      navigator.vibrate?.(200)
+    } else if (last.isNormal === false) {
+      playError()
+      navigator.vibrate?.([100, 50, 100])
+      setIsAbnormalBorder(true)
+      if (abnormalTimerRef.current !== null) {
+        window.clearTimeout(abnormalTimerRef.current)
+      }
+      abnormalTimerRef.current = window.setTimeout(() => {
+        setIsAbnormalBorder(false)
+      }, 700)
+    } else if (last.isNormal === true) {
       playSuccess()
       navigator.vibrate?.(50)
-    } else if (errorMessage || isAbnormalTransition) {
-      playError()
-
-      if (isAbnormalTransition) {
-        navigator.vibrate?.([100, 50, 100])
-        setIsAbnormalBorder(true)
-        if (abnormalTimerRef.current !== null) {
-          window.clearTimeout(abnormalTimerRef.current)
-        }
-        abnormalTimerRef.current = window.setTimeout(() => {
-          setIsAbnormalBorder(false)
-        }, 700)
-      } else {
-        navigator.vibrate?.(200)
-      }
     } else {
-      navigator.vibrate?.([100, 50, 100])
       playError()
+      navigator.vibrate?.(200)
     }
 
     if (clearTimerRef.current !== null) {
