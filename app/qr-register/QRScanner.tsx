@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import { useTankStore } from '@/src/store/tankStore'
 import { OPERATION_COLORS } from '@/src/store/operationTheme'
-import { playBeep } from '@/src/store/playBeep'
 import { parseQrCode, verifyCrc16 } from '@/src/store/qrCode'
+import { playError, playSuccess } from '@/src/store/sound'
 import { UI } from '@/src/store/uiTheme'
 import type { TankOperation } from '@/src/store/determineTransition'
 
@@ -63,7 +63,7 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'QRコードの解析に失敗しました'
       setErrorMessage(message)
-      playBeep('error')
+      playError()
       navigator.vibrate?.(200)
       return
     }
@@ -77,13 +77,13 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
     const { errorMessage, lastTransition } = useTankStore.getState()
 
     if (errorMessage) {
-      playBeep('error')
+      playError()
       navigator.vibrate?.(200)
     } else if (lastTransition && !lastTransition.isNormal) {
-      playBeep('exception')
+      playError()
       navigator.vibrate?.([100, 50, 100])
     } else {
-      playBeep('success')
+      playSuccess()
       navigator.vibrate?.(50)
     }
 

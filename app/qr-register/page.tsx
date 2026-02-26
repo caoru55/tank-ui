@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import FeedbackLayer from './FeedbackLayer'
 import LogPanel from './LogPanel'
 import QRScannerPanel from './QRScanner'
-import StatusPanel from './StatusPanel'
 import TankNumberBoom from './TankNumberBoom'
 import {
   OPERATION_COLORS,
@@ -90,43 +89,51 @@ export default function QRRegisterPage() {
         transition: `background ${UI.transition}`,
       }}
     >
-      <h1 style={{ marginBottom: 16, fontSize: 28, fontWeight: 700 }}>QR 登録機</h1>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-        {modes.map((mode) => {
-          const isSelected = operation === mode
-          return (
-            <button
-              key={mode}
-              onClick={() => handleModeChange(mode)}
-              style={{
-                padding: '12px 18px',
-                borderRadius: UI.radius,
-                border: 'none',
-                background: isSelected ? OPERATION_COLORS[mode] : '#f3f3f3',
-                color: isSelected ? '#fff' : '#333',
-                boxShadow: isSelected ? UI.shadow : 'none',
-                transition: UI.transition,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontSize: 18,
-                fontWeight: 600,
-              }}
-            >
-              <span>{OPERATION_ICONS[mode]}</span>
-              <span>{OPERATION_LABELS[mode]}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      <div style={{ position: 'relative', borderRadius: UI.radius, overflow: 'hidden' }}>
-        <FeedbackLayer operation={operation} />
-        <TankNumberBoom operation={operation} />
-        <StatusPanel />
-        <div style={{ marginTop: 12 }}>
-          <QRScannerPanel operation={operation} />
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          paddingBottom: 12,
+          marginBottom: 12,
+          background: `linear-gradient(180deg, ${themeColor}22 0%, ${themeColor}10 70%, transparent 100%)`,
+        }}
+      >
+        <div style={{ position: 'relative', borderRadius: UI.radius, overflow: 'hidden' }}>
+          <FeedbackLayer operation={operation} />
+          <TankNumberBoom operation={operation} />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <QRScannerPanel operation={operation} />
+            </div>
+            <div style={{ width: 68, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {modes.map((mode) => {
+                const isSelected = operation === mode
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => handleModeChange(mode)}
+                    title={OPERATION_LABELS[mode]}
+                    aria-label={OPERATION_LABELS[mode]}
+                    style={{
+                      width: 60,
+                      height: 44,
+                      borderRadius: 8,
+                      border: 'none',
+                      background: isSelected ? OPERATION_COLORS[mode] : '#f3f3f3',
+                      color: isSelected ? '#fff' : '#333',
+                      boxShadow: isSelected ? UI.shadow : 'none',
+                      transition: UI.transition,
+                      fontSize: 20,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {OPERATION_ICONS[mode]}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
         <div style={{ marginTop: 12 }}>
           <button

@@ -25,6 +25,12 @@ export type LastTransition = {
   exceptionType: string | null
 }
 
+export type ScannedTank = {
+  tankNumber: string
+  isNormal: boolean
+  timestamp: string
+}
+
 const TANK_STATUSES_ENDPOINT = '/api/tanks/statuses'
 
 const createEmptyStatuses = (): TankStatuses => ({
@@ -115,7 +121,7 @@ type TankStore = {
   logs: LastTransition[]
   lastScannedTank: string | null
   currentOperation: TankOperation
-  scannedTanks: string[]
+  scannedTanks: ScannedTank[]
   setJwtToken: (token: string | null) => void
   setErrorMessage: (message: string | null) => void
   addLog: (entry: LastTransition) => void
@@ -123,7 +129,7 @@ type TankStore = {
   setCurrentOperation: (operation: TankOperation) => void
   fetchStatuses: () => Promise<void>
   transitionStatus: (tankNumber: string) => Promise<void>
-  addScannedTank: (tankNumber: string) => void
+  addScannedTank: (tankNumber: string, isNormal: boolean) => void
   sendQueue: () => Promise<void>
 }
 
@@ -215,16 +221,47 @@ export const useTankStore = create<TankStore>((set, get) => ({
     }
 
     set((prev) => ({
+      scannedTanks: (() => {
+        const timestamp = nextLog.timestamp
+        const existing = prev.scannedTanks.find((item) => item.tankNumber === tankNumber)
+
+        if (!existing) {
+          return [
+            ...prev.scannedTanks,
+            {
+              tankNumber,
+              isNormal: transition.isNormal,
+              timestamp,
+            },
+          ]
+        }
+
+        return prev.scannedTanks.map((item) =>
+          item.tankNumber === tankNumber
+            ? {
+                ...item,
+                isNormal: transition.isNormal,
+                timestamp,
+              }
+            : item,
+        )
+      })(),
       errorMessage: null,
       lastTransition: nextLog,
-      scannedTanks: [...prev.scannedTanks, tankNumber],
     }))
 
     get().addLog(nextLog)
   },
-  addScannedTank: (tankNumber) => {
+  addScannedTank: (tankNumber, isNormal) => {
     set((state) => ({
-      scannedTanks: [...state.scannedTanks, tankNumber],
+      scannedTanks: [
+        ...state.scannedTanks.filter((item) => item.tankNumber !== tankNumber),
+        {
+          tankNumber,
+          isNormal,
+          timestamp: new Date().toISOString(),
+        },
+      ],
     }))
   },
   sendQueue: async () => {
@@ -253,10 +290,14 @@ export const useTankStore = create<TankStore>((set, get) => ({
       return
     }
 
-    const payload = buildPayload(state.currentOperation, state.scannedTanks, {
+    const payload = buildPayload(
+      state.currentOperation,
+      state.scannedTanks.map((item) => item.tankNumber),
+      {
       gps_lat: gps.lat,
       gps_lng: gps.lng,
-    })
+      },
+    )
 
     const queuedAt = new Date().toISOString()
 
