@@ -3,10 +3,8 @@
 import { useMemo, useState } from 'react'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import FeedbackLayer from './FeedbackLayer'
 import LogPanel from './LogPanel'
 import QRScannerPanel from './QRScanner'
-import TankNumberBoom from './TankNumberBoom'
 import {
   OPERATION_COLORS,
   OPERATION_ICONS,
@@ -24,12 +22,9 @@ export default function QRRegisterPage() {
   const router = useRouter()
   const [operation, setOperation] = useState<TankOperation>('retrieve_tanks')
   const [isAuthReady, setIsAuthReady] = useState(false)
-  const [isSending, setIsSending] = useState(false)
   const fetchStatuses = useTankStore((s) => s.fetchStatuses)
   const setJwtToken = useTankStore((s) => s.setJwtToken)
   const setCurrentOperation = useTankStore((s) => s.setCurrentOperation)
-  const sendQueue = useTankStore((s) => s.sendQueue)
-  const scannedTanks = useTankStore((s) => s.scannedTanks)
 
   const themeColor = useMemo(() => OPERATION_COLORS[operation], [operation])
 
@@ -67,19 +62,6 @@ export default function QRRegisterPage() {
     speak(OPERATION_VOICE[op])
   }
 
-  const handleSendQueue = async () => {
-    if (isSending || scannedTanks.length === 0) {
-      return
-    }
-
-    setIsSending(true)
-    try {
-      await sendQueue()
-    } finally {
-      setIsSending(false)
-    }
-  }
-
   return (
     <div
       style={{
@@ -100,8 +82,6 @@ export default function QRRegisterPage() {
         }}
       >
         <div style={{ position: 'relative', borderRadius: UI.radius, overflow: 'hidden' }}>
-          <FeedbackLayer operation={operation} />
-          <TankNumberBoom operation={operation} />
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <QRScannerPanel operation={operation} />
@@ -134,27 +114,6 @@ export default function QRRegisterPage() {
               })}
             </div>
           </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <button
-            onClick={() => void handleSendQueue()}
-            disabled={isSending || scannedTanks.length === 0}
-            style={{
-              width: '100%',
-              padding: '12px 18px',
-              borderRadius: UI.radius,
-              border: 'none',
-              background: themeColor,
-              color: '#fff',
-              boxShadow: UI.shadow,
-              opacity: isSending || scannedTanks.length === 0 ? 0.6 : 1,
-              cursor: isSending || scannedTanks.length === 0 ? 'not-allowed' : 'pointer',
-              fontSize: 18,
-              fontWeight: 700,
-            }}
-          >
-            {isSending ? '送信中…' : `一括送信 (${scannedTanks.length})`}
-          </button>
         </div>
       </div>
 

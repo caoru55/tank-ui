@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Scanner } from '@yudiel/react-qr-scanner'
+import TankNumberBoom from './TankNumberBoom'
 import { useTankStore } from '@/src/store/tankStore'
 import { OPERATION_COLORS } from '@/src/store/operationTheme'
 import { parseQrCode, verifyCrc16 } from '@/src/store/qrCode'
@@ -34,14 +35,18 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
   const transitionStatus = useTankStore((s) => s.transitionStatus)
   const setLastScannedTank = useTankStore((s) => s.setLastScannedTank)
   const setErrorMessage = useTankStore((s) => s.setErrorMessage)
-  const [isCooldown, setIsCooldown] = useState(false)
+  const [isAbnormalBorder, setIsAbnormalBorder] = useState(false)
   const cooldownRef = useRef(false)
   const clearTimerRef = useRef<number | null>(null)
+  const abnormalTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     return () => {
       if (clearTimerRef.current !== null) {
         window.clearTimeout(clearTimerRef.current)
+      }
+      if (abnormalTimerRef.current !== null) {
+        window.clearTimeout(abnormalTimerRef.current)
       }
     }
   }, [])
@@ -69,7 +74,6 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
     }
 
     cooldownRef.current = true
-    setIsCooldown(true)
     setLastScannedTank(scannedRaw ?? tankNumber)
 
     await transitionStatus(tankNumber)
@@ -82,6 +86,13 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
     } else if (lastTransition && !lastTransition.isNormal) {
       playError()
       navigator.vibrate?.([100, 50, 100])
+      setIsAbnormalBorder(true)
+      if (abnormalTimerRef.current !== null) {
+        window.clearTimeout(abnormalTimerRef.current)
+      }
+      abnormalTimerRef.current = window.setTimeout(() => {
+        setIsAbnormalBorder(false)
+      }, 700)
     } else {
       playSuccess()
       navigator.vibrate?.(50)
@@ -93,28 +104,28 @@ export default function QRScannerPanel({ operation }: QRScannerProps) {
 
     clearTimerRef.current = window.setTimeout(() => {
       cooldownRef.current = false
-      setIsCooldown(false)
       setLastScannedTank(null)
-    }, 800)
+    }, 700)
   }
 
   return (
     <div
       style={{
-        border: `4px solid ${OPERATION_COLORS[operation]}`,
+        position: 'relative',
+        border: `4px solid ${isAbnormalBorder ? '#d32f2f' : OPERATION_COLORS[operation]}`,
         borderRadius: UI.radius,
         padding: 6,
         boxShadow: UI.shadow,
-        transition: `border-color ${UI.transition}`,
+        transition: 'border-color 700ms ease-out',
         background: '#fff',
       }}
     >
+      <TankNumberBoom />
       <Scanner
         onScan={handleScan}
         onError={(err) => console.error(err)}
         constraints={{ facingMode: 'environment' }}
       />
-      {isCooldown && <p style={{ marginTop: 10, color: '#666' }}>次のスキャンを準備中…</p>}
     </div>
   )
 }
